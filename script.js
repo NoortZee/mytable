@@ -1,13 +1,24 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
 document.addEventListener('DOMContentLoaded', () => {
     // Ваши настройки Firebase
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
+        apiKey: "AIzaSyATgGUuQWQmWQkVJNX-eC-TJDjjUZZxnhk",
+        authDomain: "mytable-ec39f.firebaseapp.com",
+        databaseURL: "https://mytable-ec39f-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mytable-ec39f",
+        storageBucket: "mytable-ec39f.appspot.com",
+        messagingSenderId: "320939389795",
+        appId: "1:320939389795:web:e7993e6e7582886e671956",
+        measurementId: "G-D27M0PHTJ4"
+      };
 
     // Инициализация Firebase
     const app = firebase.initializeApp(firebaseConfig);
