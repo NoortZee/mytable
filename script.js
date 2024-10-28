@@ -1,11 +1,6 @@
-// Import the functions you need from the SDKs you need
+// Импортируйте функции, которые вам нужны из SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Ваши настройки Firebase
@@ -18,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
         messagingSenderId: "320939389795",
         appId: "1:320939389795:web:e7993e6e7582886e671956",
         measurementId: "G-D27M0PHTJ4"
-      };
+    };
 
     // Инициализация Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const attendanceTable = document.getElementById('attendanceTable');
     const addEntryButton = document.getElementById('addEntry');
@@ -30,33 +25,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'];
 
-    function loadAttendance() {
-        db.collection("attendance").get().then((querySnapshot) => {
-            attendanceTable.innerHTML = ''; // Очистка таблицы перед загрузкой
-            daysOfWeek.forEach((day, index) => {
-                const row = document.createElement('tr');
-                const date = new Date();
-                date.setDate(date.getDate() - date.getDay() + index + 1); 
-                const formattedDate = date.toLocaleDateString('ru-RU');
-                const status = querySnapshot.docs.find(doc => doc.id === day)?.data().status || 'Не указано';
+    async function loadAttendance() {
+        const querySnapshot = await getDocs(collection(db, "attendance"));
+        attendanceTable.innerHTML = ''; // Очистка таблицы перед загрузкой
+        daysOfWeek.forEach((day, index) => {
+            const row = document.createElement('tr');
+            const date = new Date();
+            date.setDate(date.getDate() - date.getDay() + index + 1); 
+            const formattedDate = date.toLocaleDateString('ru-RU');
+            const status = querySnapshot.docs.find(doc => doc.id === day)?.data().status || 'Не указано';
 
-                row.innerHTML = `
-                    <td>${day}</td>
-                    <td>${formattedDate}</td>
-                    <td>${status}</td>
-                `;
-                attendanceTable.appendChild(row);
-            });
+            row.innerHTML = `
+                <td>${day}</td>
+                <td>${formattedDate}</td>
+                <td>${status}</td>
+            `;
+            attendanceTable.appendChild(row);
         });
     }
 
-    function saveAttendance(day, isAttending) {
-        db.collection("attendance").doc(day).set({
+    async function saveAttendance(day, isAttending) {
+        await setDoc(doc(db, "attendance", day), {
             status: isAttending ? 'Да' : 'Нет'
-        }).then(() => {
-            updateAttendanceRow(day, isAttending ? 'Да' : 'Нет'); // Обновление строки в таблице
-            alert(`Запись посещаемости для ${day} сохранена!`);
         });
+        updateAttendanceRow(day, isAttending ? 'Да' : 'Нет'); // Обновление строки в таблице
+        alert(`Запись посещаемости для ${day} сохранена!`);
     }
 
     function updateAttendanceRow(day, status) {
@@ -69,13 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function resetAttendance() {
-        db.collection("attendance").get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                db.collection("attendance").doc(doc.id).delete();
-            });
-            loadAttendance(); // Перезагрузка таблицы
-        });
+    async function resetAttendance() {
+        const querySnapshot = await getDocs(collection(db, "attendance"));
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        loadAttendance(); // Перезагрузка таблицы
     }
 
     addEntryButton.addEventListener('click', () => {
