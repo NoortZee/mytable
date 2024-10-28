@@ -26,30 +26,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'];
 
     async function loadAttendance() {
-        const querySnapshot = await getDocs(collection(db, "attendance"));
-        attendanceTable.innerHTML = ''; // Очистка таблицы перед загрузкой
-        daysOfWeek.forEach((day, index) => {
-            const row = document.createElement('tr');
-            const date = new Date();
-            date.setDate(date.getDate() - date.getDay() + index + 1); 
-            const formattedDate = date.toLocaleDateString('ru-RU');
-            const status = querySnapshot.docs.find(doc => doc.id === day)?.data().status || 'Не указано';
+        try {
+            const querySnapshot = await getDocs(collection(db, "attendance"));
+            attendanceTable.innerHTML = ''; // Очистка таблицы перед загрузкой
+            daysOfWeek.forEach((day, index) => {
+                const row = document.createElement('tr');
+                const date = new Date();
+                date.setDate(date.getDate() - date.getDay() + index + 1); 
+                const formattedDate = date.toLocaleDateString('ru-RU');
+                const status = querySnapshot.docs.find(doc => doc.id === day)?.data().status || 'Не указано';
 
-            row.innerHTML = `
-                <td>${day}</td>
-                <td>${formattedDate}</td>
-                <td>${status}</td>
-            `;
-            attendanceTable.appendChild(row);
-        });
+                row.innerHTML = `
+                    <td>${day}</td>
+                    <td>${formattedDate}</td>
+                    <td>${status}</td>
+                `;
+                attendanceTable.appendChild(row);
+            });
+        } catch (error) {
+            console.error("Ошибка загрузки посещаемости:", error);
+            alert("Не удалось загрузить данные посещаемости. Проверьте консоль для получения дополнительной информации.");
+        }
     }
 
     async function saveAttendance(day, isAttending) {
-        await setDoc(doc(db, "attendance", day), {
-            status: isAttending ? 'Да' : 'Нет'
-        });
-        updateAttendanceRow(day, isAttending ? 'Да' : 'Нет'); // Обновление строки в таблице
-        alert(`Запись посещаемости для ${day} сохранена!`);
+        try {
+            await setDoc(doc(db, "attendance", day), {
+                status: isAttending ? 'Да' : 'Нет'
+            });
+            updateAttendanceRow(day, isAttending ? 'Да' : 'Нет'); // Обновление строки в таблице
+            alert(`Запись посещаемости для ${day} сохранена!`);
+        } catch (error) {
+            console.error("Ошибка сохранения посещаемости:", error);
+            alert("Не удалось сохранить данные посещаемости. Проверьте консоль для получения дополнительной информации.");
+        }
     }
 
     function updateAttendanceRow(day, status) {
@@ -63,10 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function resetAttendance() {
-        const querySnapshot = await getDocs(collection(db, "attendance"));
-        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
-        loadAttendance(); // Перезагрузка таблицы
+        try {
+            const querySnapshot = await getDocs(collection(db, "attendance"));
+            const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+            loadAttendance(); // Перезагрузка таблицы
+            alert("Все записи посещаемости успешно сброшены!");
+        } catch (error) {
+            console.error("Ошибка сброса посещаемости:", error);
+            alert("Не удалось сбросить данные посещаемости. Проверьте консоль для получения дополнительной информации.");
+        }
     }
 
     addEntryButton.addEventListener('click', () => {
@@ -75,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = daysOfWeek[dayIndex];
 
         if (day) {
-            saveAttendance(day, isAttending);
+            saveAttendance(day, isAttending); // Вызов функции saveAttendance с правильными параметрами
         } else {
             alert('Неверный номер дня. Пожалуйста, введите число от 0 до 4');
         }
@@ -83,5 +99,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resetEntriesButton.addEventListener('click', resetAttendance);
 
-    loadAttendance();
+    loadAttendance(); // Загрузка данных при инициализации
 });
